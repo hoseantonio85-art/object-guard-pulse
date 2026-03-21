@@ -85,6 +85,23 @@ const utilization: Record<string, UtilizationItem[]> = {
   ],
 };
 
+/* ─── Change event mock data ─── */
+interface ChangeEvent {
+  previousLevel: "high" | "medium" | "low";
+  currentLevel: "high" | "medium" | "low";
+  previousStrategy?: string;
+  currentStrategy?: string;
+}
+
+const changeEvents: Record<string, ChangeEvent> = {
+  r1: { previousLevel: "medium", currentLevel: "high", previousStrategy: "Мониторинг", currentStrategy: "Снижение" },
+  r5: { previousLevel: "medium", currentLevel: "high" },
+};
+
+const levelLabelsRu: Record<string, string> = {
+  high: "Высокий", medium: "Средний", low: "Низкий",
+};
+
 /* ─── AI summaries mock ─── */
 const aiSummaries: Record<string, string> = {
   r1: "Риск высокий из-за 2 продуктов с критическим уровнем после изменений в законодательстве. Требуется немедленная переоценка мер защиты данных.",
