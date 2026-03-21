@@ -1,12 +1,11 @@
 import { useState, useMemo } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { RiskBadge } from "@/components/RiskBadge";
 import { StatusBadge } from "@/components/StatusBadge";
-import { ObjectDetailModal } from "@/components/ObjectDetailModal";
-import { RiskDetailModal } from "@/components/RiskDetailModal";
-import { getObjectsByType, ObjectType, RiskLevel, AssessmentStatus, typeLabels } from "@/data/mock";
+import { useModalStack } from "@/contexts/ModalStackContext";
+import { getObjectsByType, ObjectType, RiskLevel, AssessmentStatus } from "@/data/mock";
 
 const riskOptions: { value: RiskLevel | "all"; label: string }[] = [
   { value: "all", label: "Все уровни" },
@@ -23,23 +22,21 @@ const statusOptions: { value: AssessmentStatus | "all"; label: string }[] = [
   { value: "none", label: "Нет оценки" },
 ];
 
-const typeConfig: Record<ObjectType, { title: string; pathSegment: string }> = {
-  product: { title: "Продукты", pathSegment: "products" },
-  counterparty: { title: "Контрагенты", pathSegment: "counterparties" },
-  contract: { title: "Договоры", pathSegment: "contracts" },
-  "ai-agent": { title: "AI-агенты", pathSegment: "ai-agents" },
+const typeConfig: Record<ObjectType, { title: string }> = {
+  product: { title: "Продукты" },
+  counterparty: { title: "Контрагенты" },
+  contract: { title: "Договоры" },
+  "ai-agent": { title: "AI-агенты" },
 };
 
 export default function ObjectList({ objectType }: { objectType: ObjectType }) {
-  const navigate = useNavigate();
+  const { openObject } = useModalStack();
   const [searchParams] = useSearchParams();
   const initialRisk = (searchParams.get("risk") as RiskLevel) || "all";
 
   const [search, setSearch] = useState("");
   const [riskFilter, setRiskFilter] = useState<RiskLevel | "all">(initialRisk);
   const [statusFilter, setStatusFilter] = useState<AssessmentStatus | "all">("all");
-  const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
-  const [selectedRiskId, setSelectedRiskId] = useState<string | null>(null);
 
   const items = useMemo(() => {
     let list = getObjectsByType(objectType);
@@ -84,7 +81,7 @@ export default function ObjectList({ objectType }: { objectType: ObjectType }) {
           </thead>
           <tbody>
             {items.map((obj) => (
-              <tr key={obj.id} onClick={() => setSelectedObjectId(obj.id)}
+              <tr key={obj.id} onClick={() => openObject(obj.id)}
                 className="border-b border-border last:border-0 cursor-pointer hover:bg-accent/50 transition-colors active:scale-[0.998]">
                 <td className="px-4 py-3 font-medium text-foreground">{obj.name}</td>
                 <td className="px-4 py-3"><RiskBadge level={obj.riskLevel} /></td>
@@ -98,23 +95,6 @@ export default function ObjectList({ objectType }: { objectType: ObjectType }) {
           </tbody>
         </table>
       </div>
-
-      {/* Object Detail Modal */}
-      {selectedObjectId && (
-        <ObjectDetailModal
-          objectId={selectedObjectId}
-          onClose={() => setSelectedObjectId(null)}
-          onOpenRisk={(riskId) => setSelectedRiskId(riskId)}
-        />
-      )}
-
-      {/* Risk Detail Modal (cascading) */}
-      {selectedRiskId && (
-        <RiskDetailModal
-          riskId={selectedRiskId}
-          onClose={() => setSelectedRiskId(null)}
-        />
-      )}
     </div>
   );
 }
