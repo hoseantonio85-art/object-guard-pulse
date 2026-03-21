@@ -135,7 +135,7 @@ const sections = [
 ] as const;
 
 /* ─── Main Modal Component ─── */
-interface RiskDetailModalProps { riskId: string; onClose: () => void; }
+interface RiskDetailModalProps { riskId: string; onClose: () => void; onOpenObject?: (id: string) => void; }
 
 export function RiskDetailModal({ riskId, onClose }: RiskDetailModalProps) {
   const navigate = useNavigate();
