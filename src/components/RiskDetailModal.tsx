@@ -252,6 +252,15 @@ export function RiskDetailModal({ riskId, onClose }: RiskDetailModalProps) {
                         <span className="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs font-medium text-foreground">Снижение</span>
                       </div>
                       <p className="text-sm text-foreground leading-relaxed">{aiSummary}</p>
+                      {changeEvent && (
+                        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[hsl(38_92%_95%)] px-2.5 py-1 text-xs font-medium text-[hsl(38_92%_40%)]">
+                          <Activity className="h-3 w-3 text-[hsl(38_92%_50%)]" />
+                          Переоценён: {levelLabelsRu[changeEvent.previousLevel]} → {levelLabelsRu[changeEvent.currentLevel]}
+                          {changeEvent.previousStrategy && changeEvent.currentStrategy && (
+                            <span> · Стратегия: {changeEvent.currentStrategy}</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
