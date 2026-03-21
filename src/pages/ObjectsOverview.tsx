@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { AlertTriangle, ArrowRight, Package, Users, FileText, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RiskBadge } from "@/components/RiskBadge";
+import { useModalStack } from "@/contexts/ModalStackContext";
 import { objects, typeLabels, typePaths } from "@/data/mock";
 
 const recentAssessments = objects
@@ -21,6 +22,7 @@ const typeCards = [
 
 export default function ObjectsOverview() {
   const navigate = useNavigate();
+  const { openObject } = useModalStack();
 
   return (
     <div className="space-y-8">
@@ -63,14 +65,14 @@ export default function ObjectsOverview() {
         </div>
       </section>
 
-      {/* Recent assessments */}
+      {/* Recent assessments — open modal instead of navigating */}
       <section className="animate-fade-up stagger-2">
         <h2 className="text-sm font-medium text-muted-foreground mb-3">Последние оценки</h2>
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           {recentAssessments.map((obj, i) => (
             <div
               key={obj.id}
-              onClick={() => navigate(`/objects/${typePaths[obj.type]}/${obj.id}`)}
+              onClick={() => openObject(obj.id)}
               className={`flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-accent/50 transition-colors active:scale-[0.998] ${
                 i < recentAssessments.length - 1 ? "border-b border-border" : ""
               }`}
@@ -88,7 +90,7 @@ export default function ObjectsOverview() {
         </div>
       </section>
 
-      {/* Object types */}
+      {/* Object types — navigate to list pages (not individual objects) */}
       <section className="animate-fade-up stagger-3">
         <h2 className="text-sm font-medium text-muted-foreground mb-3">Типы объектов</h2>
         <div className="grid grid-cols-4 gap-3">

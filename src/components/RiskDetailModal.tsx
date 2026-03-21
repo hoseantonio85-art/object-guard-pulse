@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   X, ChevronRight, ChevronDown, AlertTriangle, Info, Shield, FileText,
   Sparkles, Bot, User, Newspaper, Scale, CircleAlert, CircleDot, Target,
@@ -135,10 +134,9 @@ const sections = [
 ] as const;
 
 /* ─── Main Modal Component ─── */
-interface RiskDetailModalProps { riskId: string; onClose: () => void; }
+interface RiskDetailModalProps { riskId: string; onClose: () => void; onOpenObject?: (id: string) => void; zIndex?: number; }
 
-export function RiskDetailModal({ riskId, onClose }: RiskDetailModalProps) {
-  const navigate = useNavigate();
+export function RiskDetailModal({ riskId, onClose, onOpenObject, zIndex = 50 }: RiskDetailModalProps) {
   const risk = risks.find((r) => r.id === riskId);
   const [riskLevelOpen, setRiskLevelOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("overview");
@@ -198,7 +196,7 @@ export function RiskDetailModal({ riskId, onClose }: RiskDetailModalProps) {
   const previewSources = sources.slice(0, 3);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center">
+    <div className="fixed inset-0 flex items-start justify-center" style={{ zIndex }}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       <div className="relative z-10 w-full max-w-[1320px] max-h-[92vh] mt-[4vh] bg-background rounded-2xl shadow-2xl border border-border flex flex-col animate-in fade-in-0 zoom-in-95 duration-200">
@@ -387,7 +385,7 @@ export function RiskDetailModal({ riskId, onClose }: RiskDetailModalProps) {
                   <>
                     <div className="space-y-2 transition-all duration-300">
                       {(manifestationsExpanded ? manifestationsData : previewManifestations).map((m, i) => (
-                        <div key={i} onClick={() => { onClose(); navigate(`/objects/${typePaths[m.object.type]}/${m.object.id}`); }}
+                        <div key={i} onClick={() => onOpenObject?.(m.object.id)}
                           className="flex items-center justify-between rounded-xl border border-border bg-card p-4 cursor-pointer hover:shadow-md transition-shadow active:scale-[0.99]">
                           <div className="flex items-center gap-3">
                             <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">{typeLabels[m.object.type]}</span>
