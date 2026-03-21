@@ -426,12 +426,6 @@ export function RiskDetailModal({ riskId, onClose }: RiskDetailModalProps) {
               <section ref={setSectionRef("sources")} className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h2 className="text-sm font-semibold text-foreground">Источники анализа</h2>
-                  {sources.length > 3 && (
-                    <button className="flex items-center gap-1 text-xs font-medium text-[hsl(var(--primary))] hover:underline">
-                      Все источники ({sources.length})
-                      <ChevronRight className="h-3 w-3" />
-                    </button>
-                  )}
                 </div>
                 {hasReassessment && (
                   <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--risk-medium-bg))] border border-[hsl(38_92%_85%)] px-4 py-2.5">
@@ -440,32 +434,41 @@ export function RiskDetailModal({ riskId, onClose }: RiskDetailModalProps) {
                   </div>
                 )}
                 {sources.length > 0 ? (
-                  <div className="space-y-2">
-                    {previewSources.map((source, i) => {
-                      const Icon = sourceIcons[source.type];
-                      return (
-                        <div key={i} className="rounded-xl border border-border bg-card p-4 hover:shadow-sm transition-shadow">
-                          <div className="flex items-start gap-3">
-                            <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
-                              <Icon className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-xs text-muted-foreground font-medium">{sourceLabels[source.type]}</span>
-                                <span className="text-xs text-muted-foreground">· {source.date}</span>
+                  <>
+                    <div className="space-y-2 transition-all duration-300">
+                      {(sourcesExpanded ? sources : previewSources).map((source, i) => {
+                        const Icon = sourceIcons[source.type];
+                        return (
+                          <div key={i} className="rounded-xl border border-border bg-card p-4 hover:shadow-sm transition-shadow">
+                            <div className="flex items-start gap-3">
+                              <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
+                                <Icon className="h-4 w-4 text-muted-foreground" />
                               </div>
-                              <h4 className="text-sm font-medium text-foreground mb-0.5">{source.title}</h4>
-                              <p className="text-xs text-muted-foreground leading-relaxed mb-2">{source.description}</p>
-                              <div className="inline-flex items-center gap-1.5 rounded-md bg-[hsl(270_60%_95%)] text-[hsl(270_60%_40%)] px-2.5 py-1 text-xs font-medium">
-                                <Sparkles className="h-3 w-3" />
-                                {source.effect}
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-xs text-muted-foreground font-medium">{sourceLabels[source.type]}</span>
+                                  <span className="text-xs text-muted-foreground">· {source.date}</span>
+                                </div>
+                                <h4 className="text-sm font-medium text-foreground mb-0.5">{source.title}</h4>
+                                <p className="text-xs text-muted-foreground leading-relaxed mb-2">{source.description}</p>
+                                <div className="inline-flex items-center gap-1.5 rounded-md bg-[hsl(270_60%_95%)] text-[hsl(270_60%_40%)] px-2.5 py-1 text-xs font-medium">
+                                  <Sparkles className="h-3 w-3" />
+                                  {source.effect}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                    {sources.length > 3 && (
+                      <button onClick={() => setSourcesExpanded(!sourcesExpanded)}
+                        className="flex items-center gap-1.5 text-xs font-medium text-[hsl(var(--primary))] hover:underline">
+                        {sourcesExpanded ? "Свернуть" : `Все источники (${sources.length})`}
+                        <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", sourcesExpanded && "rotate-180")} />
+                      </button>
+                    )}
+                  </>
                 ) : (
                   <div className="rounded-xl border border-border bg-card p-5 text-center">
                     <p className="text-sm text-muted-foreground">Источники анализа не зафиксированы</p>
