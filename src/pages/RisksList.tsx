@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Search, SlidersHorizontal, Sparkles, ChevronDown, Users } from "lucide-react";
 import { RiskBadge } from "@/components/RiskBadge";
+import { RiskDetailModal } from "@/components/RiskDetailModal";
 import { cn } from "@/lib/utils";
 
 type RiskStatus = "new" | "in_progress" | "resolved";
@@ -70,12 +70,17 @@ const alertCards = [
 ];
 
 export default function RisksList() {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("Активные риски");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedRiskId, setSelectedRiskId] = useState<string | null>(null);
 
   return (
     <div className="space-y-5 pb-24">
+      {/* Modal */}
+      {selectedRiskId && (
+        <RiskDetailModal riskId={selectedRiskId} onClose={() => setSelectedRiskId(null)} />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between animate-fade-up">
         <div className="flex items-center gap-3">
@@ -145,7 +150,7 @@ export default function RisksList() {
           <div
             key={risk.id}
             className="rounded-xl border border-border bg-card p-5 hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => navigate(`/risks/${risk.id}`)}
+            onClick={() => setSelectedRiskId(risk.id)}
           >
             {/* Top row: badges + code */}
             <div className="flex items-center justify-between mb-3">
@@ -179,7 +184,7 @@ export default function RisksList() {
               </div>
             </div>
 
-            {/* Bottom row: expandable + org */}
+            {/* Bottom row */}
             <div className="flex items-center justify-between pt-3 border-t border-border">
               <div className="flex items-center gap-3">
                 <button
@@ -216,7 +221,7 @@ export default function RisksList() {
       </div>
 
       {/* FAB */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3">
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3">
         <button className="inline-flex items-center gap-2 rounded-full bg-[hsl(160_60%_65%)] hover:bg-[hsl(160_60%_55%)] text-white px-8 py-3 text-sm font-medium shadow-lg transition-colors">
           Зарегистрировать риск
         </button>
