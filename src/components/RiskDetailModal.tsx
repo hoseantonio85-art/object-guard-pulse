@@ -137,8 +137,7 @@ const sections = [
 /* ─── Main Modal Component ─── */
 interface RiskDetailModalProps { riskId: string; onClose: () => void; onOpenObject?: (id: string) => void; }
 
-export function RiskDetailModal({ riskId, onClose }: RiskDetailModalProps) {
-  const navigate = useNavigate();
+export function RiskDetailModal({ riskId, onClose, onOpenObject }: RiskDetailModalProps) {
   const risk = risks.find((r) => r.id === riskId);
   const [riskLevelOpen, setRiskLevelOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("overview");
