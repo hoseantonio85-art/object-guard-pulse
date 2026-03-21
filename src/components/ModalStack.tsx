@@ -8,27 +8,27 @@ export function ModalStack() {
   return (
     <>
       {stack.map((entry, index) => {
-        const zIndex = 50 + index * 10;
+        const zBase = 50 + index * 10;
         if (entry.type === "risk") {
           return (
-            <div key={`risk-${entry.id}-${index}`} style={{ zIndex }}>
-              <RiskDetailModal
-                riskId={entry.id}
-                onClose={closeTop}
-                onOpenObject={openObject}
-              />
-            </div>
+            <RiskDetailModal
+              key={`risk-${entry.id}-${index}`}
+              riskId={entry.id}
+              onClose={closeTop}
+              onOpenObject={openObject}
+              zIndex={zBase}
+            />
           );
         }
         if (entry.type === "object") {
           return (
-            <div key={`object-${entry.id}-${index}`} style={{ zIndex }}>
-              <ObjectDetailModal
-                objectId={entry.id}
-                onClose={closeTop}
-                onOpenRisk={openRisk}
-              />
-            </div>
+            <ObjectDetailModal
+              key={`object-${entry.id}-${index}`}
+              objectId={entry.id}
+              onClose={closeTop}
+              onOpenRisk={openRisk}
+              zIndex={zBase}
+            />
           );
         }
         return null;
