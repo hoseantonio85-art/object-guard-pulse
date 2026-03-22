@@ -8,7 +8,7 @@ import {
 import { RiskBadge } from "@/components/RiskBadge";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
-  objects, getManifestationsForObject, assessmentHistory, typeLabels,
+  objects, getManifestationsForObject, assessmentHistory, typeLabels, riskTypeLabels,
   type ObjectItem, type RiskLevel
 } from "@/data/mock";
 import { cn } from "@/lib/utils";
