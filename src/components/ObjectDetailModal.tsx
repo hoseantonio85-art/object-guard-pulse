@@ -3,12 +3,12 @@ import {
   X, ChevronDown, Sparkles, Shield, Clock, Activity, Target,
   CircleDot, Scale, Newspaper, FileText, Bot, User, Info,
   AlertTriangle, Check, XCircle, ExternalLink, TrendingUp,
-  ArrowRight, ChevronRight
+  ArrowRight, ChevronRight, ShieldAlert
 } from "lucide-react";
 import { RiskBadge } from "@/components/RiskBadge";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
-  objects, getManifestationsForObject, assessmentHistory, typeLabels,
+  objects, getManifestationsForObject, assessmentHistory, typeLabels, riskTypeLabels,
   type ObjectItem, type RiskLevel
 } from "@/data/mock";
 import { cn } from "@/lib/utils";
@@ -310,6 +310,12 @@ export function ObjectDetailModal({ objectId, onClose, onOpenRisk, zIndex = 50 }
                                     {m.risk.name}
                                   </span>
                                   <RiskBadge level={m.level} />
+                                  {m.risk.riskType === "behavior" && (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(270_60%_95%)] text-[hsl(270_60%_40%)] px-1.5 py-0.5 text-[10px] font-medium">
+                                      <ShieldAlert className="h-2.5 w-2.5" />
+                                      Поведенческий
+                                    </span>
+                                  )}
                                 </div>
                                 <p className="text-xs text-muted-foreground">{m.comment}</p>
                               </div>
@@ -505,8 +511,14 @@ export function ObjectDetailModal({ objectId, onClose, onOpenRisk, zIndex = 50 }
                 {/* Drawer content */}
                 <div className="flex-1 overflow-y-auto p-5 space-y-5 no-scrollbar">
                   {/* Level & contribution */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <RiskBadge level={m.level} />
+                    {m.risk.riskType === "behavior" && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(270_60%_95%)] text-[hsl(270_60%_40%)] px-2 py-0.5 text-xs font-medium">
+                        <ShieldAlert className="h-3 w-3" />
+                        Поведенческий
+                      </span>
+                    )}
                     <span className="text-xs text-muted-foreground">
                       Вклад: {m.level === "high" ? "45%" : m.level === "medium" ? "30%" : "15%"}
                     </span>

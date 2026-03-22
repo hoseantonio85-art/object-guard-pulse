@@ -1,6 +1,7 @@
 export type RiskLevel = "high" | "medium" | "low" | "none";
 export type AssessmentStatus = "actual" | "stale" | "progress" | "none";
 export type ObjectType = "product" | "counterparty" | "contract" | "ai-agent";
+export type RiskType = "operational" | "behavior";
 
 export interface ObjectItem {
   id: string;
@@ -18,6 +19,7 @@ export interface RiskItem {
   level: RiskLevel;
   manifestations: number;
   description: string;
+  riskType: RiskType;
 }
 
 export interface RiskManifestation {
@@ -51,12 +53,18 @@ export const objects: ObjectItem[] = [
 ];
 
 export const risks: RiskItem[] = [
-  { id: "r1", name: "Утечка персональных данных", level: "high", manifestations: 4, description: "Риск несанкционированного доступа или утечки персональных данных клиентов и сотрудников. Включает риски, связанные с хранением, обработкой и передачей данных." },
-  { id: "r2", name: "Зависимость от поставщика", level: "medium", manifestations: 3, description: "Риск чрезмерной зависимости от одного поставщика технологий или услуг, что может привести к проблемам при смене или отказе поставщика." },
-  { id: "r3", name: "Нарушение комплаенс-требований", level: "high", manifestations: 2, description: "Риск несоответствия требованиям регуляторов, включая ФЗ-152, GDPR и отраслевые стандарты." },
-  { id: "r4", name: "Недоступность сервиса", level: "medium", manifestations: 3, description: "Риск длительной недоступности критичных сервисов из-за технических сбоев, DDoS-атак или проблем с инфраструктурой." },
-  { id: "r5", name: "Предвзятость AI-модели", level: "high", manifestations: 2, description: "Риск систематической ошибки или предвзятости в результатах работы AI-моделей, приводящей к дискриминации или некорректным решениям." },
-  { id: "r6", name: "Устаревание технологий", level: "low", manifestations: 2, description: "Риск использования устаревших технологий и фреймворков, что снижает безопасность и производительность." },
+  { id: "r1", name: "Утечка персональных данных", level: "high", manifestations: 4, description: "Риск несанкционированного доступа или утечки персональных данных клиентов и сотрудников. Включает риски, связанные с хранением, обработкой и передачей данных.", riskType: "operational" },
+  { id: "r2", name: "Зависимость от поставщика", level: "medium", manifestations: 3, description: "Риск чрезмерной зависимости от одного поставщика технологий или услуг, что может привести к проблемам при смене или отказе поставщика.", riskType: "operational" },
+  { id: "r3", name: "Нарушение комплаенс-требований", level: "high", manifestations: 2, description: "Риск несоответствия требованиям регуляторов, включая ФЗ-152, GDPR и отраслевые стандарты.", riskType: "operational" },
+  { id: "r4", name: "Недоступность сервиса", level: "medium", manifestations: 3, description: "Риск длительной недоступности критичных сервисов из-за технических сбоев, DDoS-атак или проблем с инфраструктурой.", riskType: "operational" },
+  { id: "r5", name: "Предвзятость AI-модели", level: "high", manifestations: 2, description: "Риск систематической ошибки или предвзятости в результатах работы AI-моделей, приводящей к дискриминации или некорректным решениям.", riskType: "operational" },
+  { id: "r6", name: "Устаревание технологий", level: "low", manifestations: 2, description: "Риск использования устаревших технологий и фреймворков, что снижает безопасность и производительность.", riskType: "operational" },
+  // Behavior risks
+  { id: "br1", name: "Unauthorized enrollment", level: "high", manifestations: 3, description: "Риск несанкционированного подключения клиентов к продуктам или услугам без их явного согласия. Включает автоматическую активацию подписок, платных опций или продуктов без подтверждения.", riskType: "behavior" },
+  { id: "br2", name: "Unfair disclosure", level: "medium", manifestations: 2, description: "Риск недостаточного или вводящего в заблуждение раскрытия информации о продукте, включая условия, тарифы, ограничения и риски.", riskType: "behavior" },
+  { id: "br3", name: "Tied selling", level: "low", manifestations: 1, description: "Риск навязывания дополнительных продуктов или услуг как обязательного условия для приобретения основного продукта.", riskType: "behavior" },
+  { id: "br4", name: "Unsuitable product sale", level: "high", manifestations: 2, description: "Риск продажи продуктов, не соответствующих потребностям, финансовому положению или уровню риска клиента.", riskType: "behavior" },
+  { id: "br5", name: "Product substitution", level: "none", manifestations: 0, description: "Риск подмены продукта — предоставление клиенту продукта, отличного от запрошенного или согласованного, без надлежащего уведомления.", riskType: "behavior" },
 ];
 
 export const manifestations: RiskManifestation[] = [
@@ -76,6 +84,15 @@ export const manifestations: RiskManifestation[] = [
   { riskId: "r5", objectId: "a1", level: "medium", comment: "Нет тестирования на bias в ответах" },
   { riskId: "r6", objectId: "p4", level: "low", comment: "Используется jQuery и PHP 7.2" },
   { riskId: "r6", objectId: "c3", level: "low", comment: "Консультант не знаком с современными фреймворками" },
+  // Behavior risk manifestations
+  { riskId: "br1", objectId: "p1", level: "high", comment: "Автоматическая активация премиум-функций без подтверждения клиента при обновлении тарифа" },
+  { riskId: "br1", objectId: "p2", level: "high", comment: "Push-уведомления о подключении платных опций с предвыбранным согласием" },
+  { riskId: "br1", objectId: "p3", level: "medium", comment: "Автоматическое подключение страховки при проведении платежа свыше 50 000 ₽" },
+  { riskId: "br2", objectId: "p1", level: "medium", comment: "Условия тарифа скрыты за ссылкой в футере, не видны при оформлении" },
+  { riskId: "br2", objectId: "p2", level: "high", comment: "Комиссия за переводы не отображается до подтверждения операции" },
+  { riskId: "br3", objectId: "p3", level: "low", comment: "При подключении шлюза обязательно оформление расчётного счёта" },
+  { riskId: "br4", objectId: "p1", level: "high", comment: "CRM предлагает кредитные продукты клиентам с низким скорингом без предупреждения менеджера" },
+  { riskId: "br4", objectId: "a2", level: "medium", comment: "Скоринг-модель не учитывает финансовую грамотность при рекомендации продуктов" },
 ];
 
 export const assessmentHistory: Record<string, AssessmentEntry[]> = {
@@ -112,6 +129,11 @@ export const typePaths: Record<ObjectType, string> = {
   "ai-agent": "ai-agents",
 };
 
+export const riskTypeLabels: Record<RiskType, string> = {
+  operational: "Операционный",
+  behavior: "Поведенческий",
+};
+
 export function getObjectsByType(type: ObjectType) {
   return objects.filter((o) => o.type === type);
 }
@@ -126,4 +148,9 @@ export function getManifestationsForRisk(riskId: string) {
   return manifestations
     .filter((m) => m.riskId === riskId)
     .map((m) => ({ ...m, object: objects.find((o) => o.id === m.objectId)! }));
+}
+
+export function getRisksByType(riskType?: RiskType) {
+  if (!riskType) return risks;
+  return risks.filter((r) => r.riskType === riskType);
 }
