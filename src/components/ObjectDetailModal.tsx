@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import {
   X, ChevronDown, Sparkles, Shield, Clock, Activity, Target,
   CircleDot, Scale, Newspaper, FileText, Bot, User, Info,
-  AlertTriangle, Check, XCircle, ExternalLink, TrendingUp
+  AlertTriangle, Check, XCircle, ExternalLink, TrendingUp,
+  ArrowRight, ChevronRight
 } from "lucide-react";
 import { RiskBadge } from "@/components/RiskBadge";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -103,6 +104,7 @@ export function ObjectDetailModal({ objectId, onClose, onOpenRisk, zIndex = 50 }
   const [manifestationsExpanded, setManifestationsExpanded] = useState(false);
   const [sourcesExpanded, setSourcesExpanded] = useState(false);
   const [statuses, setStatuses] = useState<Record<number, ManifestationStatus>>({});
+  const [drawerItem, setDrawerItem] = useState<{ index: number; data: ReturnType<typeof getManifestationsForObject>[number] } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
@@ -295,50 +297,30 @@ export function ObjectDetailModal({ objectId, onClose, onOpenRisk, zIndex = 50 }
                     <div className="space-y-2 transition-all duration-300">
                       {(manifestationsExpanded ? manifestationsData : previewManifestations).map((m, i) => {
                         const mStatus = statuses[i] || "pending";
-                        return (
-                          <div key={i} className="rounded-xl border border-border bg-card p-4 hover:shadow-sm transition-shadow">
+                         return (
+                          <button
+                            key={i}
+                            onClick={() => setDrawerItem({ index: i, data: m })}
+                            className="w-full text-left rounded-xl border border-border bg-card p-4 hover:shadow-sm hover:border-[hsl(var(--primary)/0.3)] transition-all group"
+                          >
                             <div className="flex items-start justify-between gap-4">
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <button
-                                    onClick={() => onOpenRisk?.(m.riskId)}
-                                    className="text-sm font-medium text-foreground hover:text-[hsl(var(--primary))] transition-colors"
-                                  >
+                                  <span className="text-sm font-medium text-foreground group-hover:text-[hsl(var(--primary))] transition-colors">
                                     {m.risk.name}
-                                  </button>
+                                  </span>
                                   <RiskBadge level={m.level} />
                                 </div>
-                                <p className="text-xs text-muted-foreground mb-2">{m.comment}</p>
-                                <button
-                                  onClick={() => onOpenRisk?.(m.riskId)}
-                                  className="text-xs text-muted-foreground hover:text-[hsl(var(--primary))] transition-colors"
-                                >
-                                  Корп. риск: {m.risk.name} →
-                                </button>
+                                <p className="text-xs text-muted-foreground">{m.comment}</p>
                               </div>
-                              <div className="flex items-center gap-2 shrink-0">
+                              <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                                 {mStatus === "pending" && (
-                                  <>
-                                    <button
-                                      onClick={() => setManifestationStatus(i, "accepted")}
-                                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
-                                    >
-                                      <Check className="h-3 w-3" />
-                                      Принять оценку
-                                    </button>
-                                    <button
-                                      onClick={() => setManifestationStatus(i, "rejected")}
-                                      className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                                    >
-                                      <XCircle className="h-3 w-3" />
-                                      Не согласен
-                                    </button>
-                                  </>
+                                  <span className="text-xs text-muted-foreground">На рассмотрении</span>
                                 )}
                                 {mStatus === "accepted" && (
                                   <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(var(--status-active-bg))] text-[hsl(var(--status-active))] px-2.5 py-1 text-xs font-medium">
                                     <Check className="h-3 w-3" />
-                                    Учтён в корп. риске
+                                    Учтён
                                   </span>
                                 )}
                                 {mStatus === "rejected" && (
@@ -347,9 +329,10 @@ export function ObjectDetailModal({ objectId, onClose, onOpenRisk, zIndex = 50 }
                                     Отклонён
                                   </span>
                                 )}
+                                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-[hsl(var(--primary))] transition-colors" />
                               </div>
                             </div>
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
@@ -490,6 +473,143 @@ export function ObjectDetailModal({ objectId, onClose, onOpenRisk, zIndex = 50 }
             Принять оценку
           </button>
         </div>
+
+        {/* ── Manifestation Drawer ── */}
+        {drawerItem && (() => {
+          const m = drawerItem.data;
+          const mStatus = statuses[drawerItem.index] || "pending";
+          const relatedSources = (objectSources[objectId] || []).filter(
+            s => s.title.toLowerCase().includes(m.risk.name.toLowerCase().split(" ")[0]) || true
+          ).slice(0, 2);
+
+          return (
+            <>
+              {/* Drawer backdrop inside modal */}
+              <div
+                className="absolute inset-0 z-30 bg-black/20 rounded-2xl transition-opacity duration-200"
+                onClick={() => setDrawerItem(null)}
+              />
+              {/* Drawer panel */}
+              <div className="absolute right-0 top-0 bottom-0 z-40 w-[440px] bg-background border-l border-border rounded-r-2xl shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
+                {/* Drawer header */}
+                <div className="px-5 py-4 border-b border-border shrink-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-muted-foreground">Проявление риска</span>
+                    <button onClick={() => setDrawerItem(null)} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <h3 className="text-base font-semibold text-foreground">{m.risk.name}</h3>
+                </div>
+
+                {/* Drawer content */}
+                <div className="flex-1 overflow-y-auto p-5 space-y-5 no-scrollbar">
+                  {/* Level & contribution */}
+                  <div className="flex items-center gap-3">
+                    <RiskBadge level={m.level} />
+                    <span className="text-xs text-muted-foreground">
+                      Вклад: {m.level === "high" ? "45%" : m.level === "medium" ? "30%" : "15%"}
+                    </span>
+                  </div>
+
+                  {/* AI explanation */}
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <div className="flex items-start gap-2.5">
+                      <Sparkles className="h-4 w-4 text-[hsl(270_60%_50%)] shrink-0 mt-0.5" />
+                      <div>
+                        <span className="text-xs font-medium text-muted-foreground mb-1 block">AI-объяснение</span>
+                        <p className="text-sm text-foreground leading-relaxed">{m.comment}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Linked corporate risk */}
+                  <div className="space-y-2">
+                    <span className="text-xs font-medium text-muted-foreground">Корпоративный риск</span>
+                    <button
+                      onClick={() => {
+                        setDrawerItem(null);
+                        onOpenRisk?.(m.riskId);
+                      }}
+                      className="w-full rounded-xl border border-border bg-card p-4 flex items-center justify-between gap-3 hover:border-[hsl(var(--primary)/0.3)] hover:shadow-sm transition-all group"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground group-hover:text-[hsl(var(--primary))] transition-colors">{m.risk.name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Уровень: {levelLabelsRu[m.risk.level]}</p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-[hsl(var(--primary))] transition-colors shrink-0" />
+                    </button>
+                  </div>
+
+                  {/* Related sources */}
+                  {relatedSources.length > 0 && (
+                    <div className="space-y-2">
+                      <span className="text-xs font-medium text-muted-foreground">Источники</span>
+                      <div className="space-y-2">
+                        {relatedSources.map((s, si) => {
+                          const SIcon = sourceIcons[s.type];
+                          return (
+                            <div key={si} className="rounded-xl border border-border bg-card p-3">
+                              <div className="flex items-start gap-2.5">
+                                <div className="h-6 w-6 rounded-md bg-muted flex items-center justify-center shrink-0 mt-0.5">
+                                  <SIcon className="h-3 w-3 text-muted-foreground" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-medium text-foreground">{s.title}</p>
+                                  <p className="text-xs text-muted-foreground mt-0.5">{s.effect}</p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Drawer actions */}
+                <div className="px-5 py-4 border-t border-border shrink-0 space-y-2">
+                  {mStatus === "pending" && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setManifestationStatus(drawerItem.index, "accepted");
+                          setDrawerItem(null);
+                        }}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:bg-foreground/90 transition-colors"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                        Принять оценку
+                      </button>
+                      <button
+                        onClick={() => {
+                          setManifestationStatus(drawerItem.index, "rejected");
+                          setDrawerItem(null);
+                        }}
+                        className="inline-flex items-center justify-center gap-1 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                      >
+                        <XCircle className="h-3.5 w-3.5" />
+                        Не согласен
+                      </button>
+                    </div>
+                  )}
+                  {mStatus === "accepted" && (
+                    <div className="flex items-center justify-center gap-1.5 rounded-lg bg-[hsl(var(--status-active-bg))] text-[hsl(var(--status-active))] px-4 py-2 text-sm font-medium">
+                      <Check className="h-3.5 w-3.5" />
+                      Учтён в корпоративном риске
+                    </div>
+                  )}
+                  {mStatus === "rejected" && (
+                    <div className="flex items-center justify-center gap-1.5 rounded-lg bg-muted text-muted-foreground px-4 py-2 text-sm font-medium">
+                      <XCircle className="h-3.5 w-3.5" />
+                      Оценка отклонена
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          );
+        })()}
       </div>
     </div>
   );
