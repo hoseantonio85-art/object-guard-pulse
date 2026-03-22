@@ -297,50 +297,30 @@ export function ObjectDetailModal({ objectId, onClose, onOpenRisk, zIndex = 50 }
                     <div className="space-y-2 transition-all duration-300">
                       {(manifestationsExpanded ? manifestationsData : previewManifestations).map((m, i) => {
                         const mStatus = statuses[i] || "pending";
-                        return (
-                          <div key={i} className="rounded-xl border border-border bg-card p-4 hover:shadow-sm transition-shadow">
+                         return (
+                          <button
+                            key={i}
+                            onClick={() => setDrawerItem({ index: i, data: m })}
+                            className="w-full text-left rounded-xl border border-border bg-card p-4 hover:shadow-sm hover:border-[hsl(var(--primary)/0.3)] transition-all group"
+                          >
                             <div className="flex items-start justify-between gap-4">
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <button
-                                    onClick={() => onOpenRisk?.(m.riskId)}
-                                    className="text-sm font-medium text-foreground hover:text-[hsl(var(--primary))] transition-colors"
-                                  >
+                                  <span className="text-sm font-medium text-foreground group-hover:text-[hsl(var(--primary))] transition-colors">
                                     {m.risk.name}
-                                  </button>
+                                  </span>
                                   <RiskBadge level={m.level} />
                                 </div>
-                                <p className="text-xs text-muted-foreground mb-2">{m.comment}</p>
-                                <button
-                                  onClick={() => onOpenRisk?.(m.riskId)}
-                                  className="text-xs text-muted-foreground hover:text-[hsl(var(--primary))] transition-colors"
-                                >
-                                  Корп. риск: {m.risk.name} →
-                                </button>
+                                <p className="text-xs text-muted-foreground">{m.comment}</p>
                               </div>
-                              <div className="flex items-center gap-2 shrink-0">
+                              <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                                 {mStatus === "pending" && (
-                                  <>
-                                    <button
-                                      onClick={() => setManifestationStatus(i, "accepted")}
-                                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
-                                    >
-                                      <Check className="h-3 w-3" />
-                                      Принять оценку
-                                    </button>
-                                    <button
-                                      onClick={() => setManifestationStatus(i, "rejected")}
-                                      className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                                    >
-                                      <XCircle className="h-3 w-3" />
-                                      Не согласен
-                                    </button>
-                                  </>
+                                  <span className="text-xs text-muted-foreground">На рассмотрении</span>
                                 )}
                                 {mStatus === "accepted" && (
                                   <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(var(--status-active-bg))] text-[hsl(var(--status-active))] px-2.5 py-1 text-xs font-medium">
                                     <Check className="h-3 w-3" />
-                                    Учтён в корп. риске
+                                    Учтён
                                   </span>
                                 )}
                                 {mStatus === "rejected" && (
@@ -349,9 +329,10 @@ export function ObjectDetailModal({ objectId, onClose, onOpenRisk, zIndex = 50 }
                                     Отклонён
                                   </span>
                                 )}
+                                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-[hsl(var(--primary))] transition-colors" />
                               </div>
                             </div>
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
