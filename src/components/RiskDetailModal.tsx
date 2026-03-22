@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import {
   X, ChevronRight, ChevronDown, AlertTriangle, Info, Shield, FileText,
   Sparkles, Bot, User, Newspaper, Scale, CircleAlert, CircleDot, Target,
-  ExternalLink, TrendingUp, Clock, Activity
+  ExternalLink, TrendingUp, Clock, Activity, ShieldAlert
 } from "lucide-react";
 import { RiskBadge } from "@/components/RiskBadge";
 import { risks, getManifestationsForRisk, typeLabels, riskTypeLabels } from "@/data/mock";
@@ -38,6 +38,17 @@ const mockSources: Record<string, AnalysisSource[]> = {
     { type: "ai-agent", title: "NORM AI: bias-тест скоринг-модели", description: "Выявлена систематическая предвзятость в возрастной когорте 18-25", effect: "Модель помечена для переобучения", date: "18.03.2026" },
     { type: "document", title: "Отчёт внешнего аудитора", description: "Независимая проверка подтвердила наличие bias", effect: "Уровень риска подтверждён как высокий", date: "16.03.2026" },
   ],
+  br1: [
+    { type: "ai-agent", title: "NORM AI: анализ продуктовых потоков", description: "Выявлены паттерны автоматической активации без согласия клиента", effect: "+3 продукта с проявлениями", date: "20.03.2026" },
+    { type: "law", title: "Указание ЦБ по защите прав потребителей", description: "Новые требования к раскрытию информации о подключаемых услугах", effect: "Риск повышен до высокого уровня", date: "18.03.2026" },
+  ],
+  br2: [
+    { type: "document", title: "Отчёт тайного покупателя", description: "Выявлены несоответствия в раскрытии условий тарифов", effect: "+2 продукта с проявлениями", date: "19.03.2026" },
+  ],
+  br4: [
+    { type: "ai-agent", title: "NORM AI: анализ рекомендаций", description: "Скоринг-модель рекомендует неподходящие продукты клиентам с низким доходом", effect: "Уровень риска подтверждён как высокий", date: "17.03.2026" },
+    { type: "news", title: "Штраф банку за мисселинг", description: "Регулятор оштрафовал конкурента за навязывание кредитных продуктов", effect: "Рекомендована проверка продуктовых процессов", date: "15.03.2026" },
+  ],
 };
 
 /* ─── Risk factors & consequences mock ─── */
@@ -45,12 +56,17 @@ const riskFactors: Record<string, string[]> = {
   r1: ["Нарушение регламентов защиты данных в условиях ужесточения требований ФЗ-420", "Зависимость от стабильности работы IT-инфраструктуры"],
   r3: ["Частые изменения регуляторных требований", "Недостаточная автоматизация комплаенс-процессов"],
   r5: ["Недостаточное качество обучающих данных", "Отсутствие регулярного bias-тестирования"],
+  br1: ["Отсутствие явного opt-in при подключении платных опций", "Автоматическая активация при обновлении тарифного плана"],
+  br2: ["Условия тарифов скрыты в сносках", "Комиссии не отображаются до подтверждения"],
+  br4: ["Скоринг-модель не учитывает профиль клиента при рекомендациях", "Нет контроля соответствия продукта потребностям"],
 };
 
 const consequences: Record<string, string[]> = {
   r1: ["Штраф в размере до 5 000 000 руб. или до 4% годового оборота", "Репутационные потери и отток клиентов", "Судебные иски от пострадавших клиентов", "Временная приостановка лицензии на деятельность"],
   r3: ["Штрафные санкции от регулятора", "Ограничение деятельности до устранения нарушений"],
   r5: ["Дискриминационные решения по кредитным заявкам", "Репутационные риски при публичном раскрытии"],
+  br1: ["Жалобы клиентов и обращения в ЦБ", "Штраф за нарушение прав потребителей", "Репутационные потери"],
+  br4: ["Мисселинг и судебные иски от клиентов", "Предписание регулятора о приостановке продаж"],
 };
 
 /* ─── Measures mock ─── */
@@ -67,6 +83,12 @@ const measures: Record<string, Measure[]> = {
   ],
   r3: [{ id: "m6", title: "Проведение аудита соответствия ФЗ-152", code: "MSR-171200", date: "01.03.2024", status: "new", impactPercent: 40, objectsApplied: 1 }],
   r5: [{ id: "m7", title: "Запуск bias-тестирования для скоринг-модели", code: "MSR-171210", date: "15.03.2024", status: "new", impactPercent: 50, objectsApplied: 2 }],
+  br1: [
+    { id: "bm1", title: "Внедрение двойного подтверждения при подключении услуг", code: "MSR-200001", date: "20.03.2026", status: "new", impactPercent: 40, objectsApplied: 3 },
+  ],
+  br4: [
+    { id: "bm2", title: "Пересмотр алгоритма подбора продуктов в скоринг-модели", code: "MSR-200002", date: "18.03.2026", status: "new", impactPercent: 35, objectsApplied: 2 },
+  ],
 };
 
 const measureStatusConfig: Record<MeasureStatus, { label: string; className: string }> = {
@@ -95,10 +117,11 @@ interface ChangeEvent {
 const changeEvents: Record<string, ChangeEvent> = {
   r1: { previousLevel: "medium", currentLevel: "high", previousStrategy: "Мониторинг", currentStrategy: "Снижение" },
   r5: { previousLevel: "medium", currentLevel: "high" },
+  br1: { previousLevel: "medium", currentLevel: "high", previousStrategy: "Мониторинг", currentStrategy: "Снижение" },
 };
 
 const levelLabelsRu: Record<string, string> = {
-  high: "Высокий", medium: "Средний", low: "Низкий",
+  high: "Высокий", medium: "Средний", low: "Низкий", none: "Не выявлен",
 };
 
 /* ─── AI summaries mock ─── */
@@ -106,6 +129,11 @@ const aiSummaries: Record<string, string> = {
   r1: "Риск высокий из-за 2 продуктов с критическим уровнем после изменений в законодательстве. Требуется немедленная переоценка мер защиты данных.",
   r3: "Риск повышен после обновления требований ЦБ. 1 договор не соответствует новым стандартам комплаенс.",
   r5: "Выявлена систематическая предвзятость скоринг-модели. Необходимо переобучение и расширение выборки.",
+  br1: "Риск высокий — подтверждён в 3 продуктах, включая 2 с критическими проявлениями. Рекомендуется проверить процессы подключения услуг и получения согласий.",
+  br2: "Риск средний — выявлены несоответствия в раскрытии условий в 2 продуктах. Необходимо обновить интерфейсы оформления.",
+  br3: "Риск низкий — обнаружен 1 случай навязывания дополнительного продукта. Мониторинг продолжается.",
+  br4: "Риск высокий — скоринг-модель и CRM рекомендуют неподходящие продукты. Требуется пересмотр алгоритмов подбора.",
+  br5: "Проявления не обнаружены. Риск оценён на основе внешних факторов.",
 };
 
 /* ─── Donut chart component ─── */
@@ -175,12 +203,13 @@ export function RiskDetailModal({ riskId, onClose, onOpenObject, zIndex = 50 }: 
 
   if (!risk) return null;
 
+  const isBehavior = risk.riskType === "behavior";
   const manifestationsData = getManifestationsForRisk(risk.id);
   const sources = mockSources[risk.id] || [];
   const factors = riskFactors[risk.id] || [];
   const cons = consequences[risk.id] || [];
   const riskMeasures = measures[risk.id] || [];
-  const util = utilization[risk.id];
+  const util = isBehavior ? undefined : utilization[risk.id]; // hide utilization for behavior
   const hasReassessment = sources.some(s => s.effect.includes("переоценён"));
   const aiSummary = aiSummaries[risk.id] || `Риск ${risk.level === "high" ? "высокий" : risk.level === "medium" ? "средний" : "низкий"}. Требует внимания.`;
   const changeEvent = changeEvents[risk.id];
@@ -207,6 +236,12 @@ export function RiskDetailModal({ riskId, onClose, onOpenObject, zIndex = 50 }: 
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground font-medium">Риск</span>
                 <span className="inline-flex items-center rounded-full bg-[hsl(var(--status-active-bg))] text-[hsl(var(--status-active))] px-2 py-0.5 text-xs font-medium">Активен</span>
+                {isBehavior && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(270_60%_95%)] text-[hsl(270_60%_40%)] px-2 py-0.5 text-xs font-medium">
+                    <ShieldAlert className="h-3 w-3" />
+                    Поведенческий
+                  </span>
+                )}
               </div>
               <div>
                 <h1 className="text-lg font-semibold text-foreground">{risk.name}</h1>
@@ -247,7 +282,9 @@ export function RiskDetailModal({ riskId, onClose, onOpenObject, zIndex = 50 }: 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1.5">
                         <span className="text-xs font-medium text-muted-foreground">AI-сводка</span>
-                        <span className="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs font-medium text-foreground">Снижение</span>
+                        <span className="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs font-medium text-foreground">
+                          {isBehavior ? "Мониторинг" : "Снижение"}
+                        </span>
                       </div>
                       <p className="text-sm text-foreground leading-relaxed">{aiSummary}</p>
                       {changeEvent && (
@@ -269,7 +306,9 @@ export function RiskDetailModal({ riskId, onClose, onOpenObject, zIndex = 50 }: 
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-semibold text-foreground">Уровень риска</span>
                       <RiskBadge level={risk.level} />
-                      <span className="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs font-medium text-foreground">Снижение</span>
+                      <span className="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs font-medium text-foreground">
+                        {isBehavior ? "Мониторинг" : "Снижение"}
+                      </span>
                     </div>
                     <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", riskLevelOpen && "rotate-180")} />
                   </button>
@@ -294,25 +333,29 @@ export function RiskDetailModal({ riskId, onClose, onOpenObject, zIndex = 50 }: 
                         </div>
                         <div className="rounded-lg border border-border p-3">
                           <div className="text-xs text-muted-foreground mb-1.5">Стратегия реагирования</div>
-                          <span className="inline-flex items-center rounded-md bg-[hsl(var(--risk-low-bg))] text-[hsl(var(--risk-low))] px-2 py-0.5 text-xs font-medium">Снижение</span>
+                          <span className="inline-flex items-center rounded-md bg-[hsl(var(--risk-low-bg))] text-[hsl(var(--risk-low))] px-2 py-0.5 text-xs font-medium">
+                            {isBehavior ? "Мониторинг" : "Снижение"}
+                          </span>
                         </div>
                       </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-2">Потенциальные потери</div>
-                        <div className="grid grid-cols-3 gap-3">
-                          {[{ l: "Прямые", v: "3 420 000 ₽" }, { l: "Косвенные", v: "3 420 000 ₽" }, { l: "Кредитные", v: "3 420 000 ₽" }].map((item, i) => (
-                            <div key={i} className="rounded-lg border border-border p-3">
-                              <div className="text-xs text-muted-foreground mb-1">{item.l}</div>
-                              <div className="text-sm font-semibold text-foreground">{item.v}</div>
-                            </div>
-                          ))}
+                      {!isBehavior && (
+                        <div>
+                          <div className="text-xs text-muted-foreground mb-2">Потенциальные потери</div>
+                          <div className="grid grid-cols-3 gap-3">
+                            {[{ l: "Прямые", v: "3 420 000 ₽" }, { l: "Косвенные", v: "3 420 000 ₽" }, { l: "Кредитные", v: "3 420 000 ₽" }].map((item, i) => (
+                              <div key={i} className="rounded-lg border border-border p-3">
+                                <div className="text-xs text-muted-foreground mb-1">{item.l}</div>
+                                <div className="text-sm font-semibold text-foreground">{item.v}</div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   )}
                 </div>
 
-                {/* Utilization */}
+                {/* Utilization — only for operational risks */}
                 {util && (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -367,7 +410,9 @@ export function RiskDetailModal({ riskId, onClose, onOpenObject, zIndex = 50 }: 
               <section ref={setSectionRef("manifestations")} className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <h2 className="text-sm font-semibold text-foreground">Где проявляется</h2>
+                    <h2 className="text-sm font-semibold text-foreground">
+                      {isBehavior ? "Проявления в продуктах" : "Где проявляется"}
+                    </h2>
                     <span className="text-xs text-muted-foreground">
                       {manifestationsData.length > 0 ? `в ${manifestationsData.length} объектах` : ""}
                     </span>
@@ -412,9 +457,13 @@ export function RiskDetailModal({ riskId, onClose, onOpenObject, zIndex = 50 }: 
                       <Target className="h-6 w-6 text-muted-foreground" />
                     </div>
                     <p className="text-sm font-medium text-foreground mb-1">Проявления не обнаружены</p>
-                    <p className="text-xs text-muted-foreground mb-4">Риск оценён на основе внешних факторов или ещё не проведена оценка объектов</p>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      {isBehavior
+                        ? "Риск оценён на основе внешних факторов или продукты ещё не прошли оценку"
+                        : "Риск оценён на основе внешних факторов или ещё не проведена оценка объектов"}
+                    </p>
                     <button className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent transition-colors">
-                      Проверить объекты
+                      {isBehavior ? "Оценить продукты" : "Проверить объекты"}
                     </button>
                   </div>
                 )}
@@ -532,12 +581,14 @@ export function RiskDetailModal({ riskId, onClose, onOpenObject, zIndex = 50 }: 
                     Добавить меру <span className="text-lg leading-none">+</span>
                   </button>
                 </div>
-                <div className="flex items-center gap-4 mb-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">Эффективность мер</span>
-                    <span className="inline-flex items-center rounded-full bg-[hsl(200_80%_95%)] text-[hsl(200_80%_40%)] px-2 py-0.5 text-xs font-semibold">{effectivenessPercent}%</span>
+                {riskMeasures.length > 0 && (
+                  <div className="flex items-center gap-4 mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">Эффективность мер</span>
+                      <span className="inline-flex items-center rounded-full bg-[hsl(200_80%_95%)] text-[hsl(200_80%_40%)] px-2 py-0.5 text-xs font-semibold">{effectivenessPercent}%</span>
+                    </div>
                   </div>
-                </div>
+                )}
                 <div className="space-y-2">
                   {riskMeasures.map((measure) => (
                     <div key={measure.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
@@ -557,6 +608,11 @@ export function RiskDetailModal({ riskId, onClose, onOpenObject, zIndex = 50 }: 
                       </div>
                     </div>
                   ))}
+                  {riskMeasures.length === 0 && (
+                    <div className="rounded-xl border border-border bg-card p-5 text-center">
+                      <p className="text-sm text-muted-foreground">Меры не назначены</p>
+                    </div>
+                  )}
                 </div>
               </section>
 
@@ -567,7 +623,11 @@ export function RiskDetailModal({ riskId, onClose, onOpenObject, zIndex = 50 }: 
                   <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
                     <CircleDot className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <span className="text-sm text-foreground">ДубльКИС / Департамент исследований и разработок / Управление информационных технологий</span>
+                  <span className="text-sm text-foreground">
+                    {isBehavior
+                      ? "ДубльКИС / Отдел продуктового комплаенса"
+                      : "ДубльКИС / Департамент исследований и разработок / Управление информационных технологий"}
+                  </span>
                 </div>
               </section>
             </div>
@@ -577,7 +637,8 @@ export function RiskDetailModal({ riskId, onClose, onOpenObject, zIndex = 50 }: 
               <div className="rounded-xl border border-border bg-card p-5 space-y-3">
                 <h3 className="text-sm font-semibold text-foreground">Информация</h3>
                 <div className="space-y-2 text-xs">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Риск</span><span className="font-medium text-foreground font-mono">RSK-41242001</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Риск</span><span className="font-medium text-foreground font-mono">{riskId.startsWith("br") ? "BHV-" : "RSK-"}41242001</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Тип</span><span className="font-medium text-foreground">{riskTypeLabels[risk.riskType]}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Создан</span><span className="text-foreground">01 февраля 2024</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Обновлён</span><span className="text-foreground">19 марта 2026</span></div>
                   <div className="flex justify-between items-center">
