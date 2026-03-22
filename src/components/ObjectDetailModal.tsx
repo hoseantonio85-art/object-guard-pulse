@@ -3,7 +3,7 @@ import {
   X, ChevronDown, Sparkles, Shield, Clock, Activity, Target,
   CircleDot, Scale, Newspaper, FileText, Bot, User, Info,
   AlertTriangle, Check, XCircle, ExternalLink, TrendingUp,
-  ArrowRight, ChevronRight
+  ArrowRight, ChevronRight, ShieldAlert
 } from "lucide-react";
 import { RiskBadge } from "@/components/RiskBadge";
 import { StatusBadge } from "@/components/StatusBadge";
