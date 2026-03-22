@@ -5,7 +5,7 @@ import {
   ExternalLink, TrendingUp, Clock, Activity
 } from "lucide-react";
 import { RiskBadge } from "@/components/RiskBadge";
-import { risks, getManifestationsForRisk, typeLabels, typePaths } from "@/data/mock";
+import { risks, getManifestationsForRisk, typeLabels, riskTypeLabels } from "@/data/mock";
 import { cn } from "@/lib/utils";
 
 /* ─── Source analysis mock data ─── */
